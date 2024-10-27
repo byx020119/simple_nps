@@ -43,12 +43,12 @@ class PacketAnalyzer(QThread):
                 return layer_name
 
         return 'Unknown'
+
     def run(self):
         while True:
             index, packet = self.queue.get()
             # 打印packet的摘要信息
-            print(packet.summary())
-
+            # print(packet.summary())
 
             packet_time = datetime.fromtimestamp(packet.time).strftime('%Y-%m-%d %H:%M:%S')
 
@@ -70,11 +70,19 @@ class PacketAnalyzer(QThread):
             except:
                 info = 'Unknown info format'
 
+            # 获取端口信息
+            src_port = ''
+            dst_port = ''
+            if 'TCP' in packet or 'UDP' in packet:
+                src_port = packet['TCP'].sport if 'TCP' in packet else packet['UDP'].sport
+                dst_port = packet['TCP'].dport if 'TCP' in packet else packet['UDP'].dport
+
             self.packet_analyzed.emit({
-                # 'index': index,
                 'time': packet_time,
                 'src': src,
                 'dst': dst,
+                'src_port': str(src_port),
+                'dst_port': str(dst_port),
                 'protocol': protocol,
                 'length': length,
                 'info': info
@@ -124,18 +132,17 @@ class SnifferGUI(QMainWindow):
         layout.addWidget(self.filter_entry)
 
         self.packet_table = QTableWidget()
-        self.packet_table.setColumnCount(6)
-        # self.packet_table.setColumnCount(7)
-        self.packet_table.setColumnWidth(0, 300)  # 设置第一列宽度为 50 像素
-        self.packet_table.setColumnWidth(1, 200)  # 设置第二列宽度为 150 像素
-        self.packet_table.setColumnWidth(2, 200)  # 设置第三列宽度为 150 像素
-        self.packet_table.setColumnWidth(3, 500)  # 设置第四列宽度为 150 像素
-        self.packet_table.setColumnWidth(4, 100)  # 设置第五列宽度为 100 像素
-        self.packet_table.setColumnWidth(5, 1000)  # 设置第六列宽度为 80 像素
-        # self.packet_table.setColumnWidth(6, 300)  # 设置第七列宽度为 300 像素
+        self.packet_table.setColumnCount(8)
+        self.packet_table.setColumnWidth(0, 300)  # 设置第一列宽度为 300 像素
+        self.packet_table.setColumnWidth(1, 200)  # 设置第二列宽度为 200 像素
+        self.packet_table.setColumnWidth(2, 200)  # 设置第三列宽度为 200 像素
+        self.packet_table.setColumnWidth(3, 150)  # 设置第四列宽度为 200 像素
+        self.packet_table.setColumnWidth(4, 150)  # 设置第五列宽度为 200 像素
+        self.packet_table.setColumnWidth(5, 100)  # 设置第六列宽度为 100 像素
+        self.packet_table.setColumnWidth(6, 100)  # 设置第七列宽度为 1000 像素
+        self.packet_table.setColumnWidth(7, 1000)  # 设置第八列宽度为 1000 像素
         self.packet_table.setHorizontalHeaderLabels(
-            ['Time', 'Source', 'Destination', 'Protocol', 'Length', 'Info'])
-        # self.packet_table.setHorizontalHeaderLabels(['No', 'Time', 'Source', 'Destination', 'Protocol', 'Length', 'Info'])
+            ['Time', 'Source', 'Destination', 'SrcPort', 'DstPort', 'Protocol', 'Length', 'Info'])
         layout.addWidget(self.packet_table)
 
         self.packet_analyzer_threads = []
@@ -192,13 +199,14 @@ class SnifferGUI(QMainWindow):
     def update_packet_table(self, data):
         row_count = self.packet_table.rowCount()
         self.packet_table.insertRow(row_count)
-        # self.packet_table.setItem(row_count, 0, QTableWidgetItem(str(data['index'])))
         self.packet_table.setItem(row_count, 0, QTableWidgetItem(data['time']))
         self.packet_table.setItem(row_count, 1, QTableWidgetItem(data['src']))
         self.packet_table.setItem(row_count, 2, QTableWidgetItem(data['dst']))
-        self.packet_table.setItem(row_count, 3, QTableWidgetItem(data['protocol']))
-        self.packet_table.setItem(row_count, 4, QTableWidgetItem(data['length']))
-        self.packet_table.setItem(row_count, 5, QTableWidgetItem(data['info']))
+        self.packet_table.setItem(row_count, 3, QTableWidgetItem(data['src_port']))
+        self.packet_table.setItem(row_count, 4, QTableWidgetItem(data['dst_port']))
+        self.packet_table.setItem(row_count, 5, QTableWidgetItem(data['protocol']))
+        self.packet_table.setItem(row_count, 6, QTableWidgetItem(data['length']))
+        self.packet_table.setItem(row_count, 7, QTableWidgetItem(data['info']))
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
