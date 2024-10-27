@@ -185,6 +185,7 @@ class SnifferGUI(QMainWindow):
 
     def check_filter(self):
         self.filter_content = self.filter_entry.text().strip()
+
         if self.filter_content == '':
             self.filter_entry.setStyleSheet("background-color: white;")
             return
@@ -195,12 +196,22 @@ class SnifferGUI(QMainWindow):
                 raise ValueError("Invalid characters in the filter")
 
             # 尝试使用 Scapy 编译过滤器
-            compiled_filter = compile_filter(self.filter_content)
+            compile_filter(self.filter_content)
             self.filter_entry.setStyleSheet("background-color: green;")
         except Exception as e:
             print(f"Filter error: {e}")
             self.filter_entry.setStyleSheet("background-color: red;")
             self.filter_content = ''
+            # 弹出错误信息框，并提供正确格式的例子
+            QMessageBox.critical(
+                self,
+                '错误',
+                f'输入的过滤器格式有误：{str(e)}\n\n'
+                '正确的过滤器格式示例：\n'
+                '- 只捕获特定的IP地址: host 192.168.1.1\n'
+                '- 捕获特定端口上的流量: port 80\n'
+                '- 捕获特定协议的流量: tcp or udp or icmp'
+            )
 
     def update_packet_table(self, data):
         row_count = self.packet_table.rowCount()
