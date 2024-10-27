@@ -93,13 +93,18 @@ class SnifferGUI(QMainWindow):
         self.setWindowTitle('Sniffer')
         self.setGeometry(100, 100, 2560, 1440)
 
-        self.iface = ''
+        self.iface = ''  # 默认值将在这里设置
         self.packets = []
         self.handling_q = Queue()
         self.working = False
         self.filter_content = ''
         self.packet_nums = 0
         self.interfaces = []
+
+        # 获取可用的网络接口列表
+        self.interfaces = get_working_ifaces()
+        if self.interfaces:
+            self.iface = self.interfaces[0].name  # 设置默认网络接口为第一个可用接口
 
         self.initUI()
 
@@ -113,10 +118,11 @@ class SnifferGUI(QMainWindow):
         self.interface_label = QLabel('选择网络接口:')
         layout.addWidget(self.interface_label)
 
+        # 初始化下拉框并设置默认值
         self.interface_combobox = QComboBox()
-        self.interfaces = get_working_ifaces()
         for iface in self.interfaces:
             self.interface_combobox.addItem(iface.name)
+        self.interface_combobox.setCurrentText(self.iface)  # 设置默认值
         self.interface_combobox.currentTextChanged.connect(self.select_interface)
         layout.addWidget(self.interface_combobox)
 
@@ -132,12 +138,12 @@ class SnifferGUI(QMainWindow):
         layout.addWidget(self.filter_entry)
 
         self.packet_table = QTableWidget()
-        self.packet_table.setColumnCount(8)
+        self.packet_table.setColumnCount(8)  # 增加两列
         self.packet_table.setColumnWidth(0, 300)  # 设置第一列宽度为 300 像素
         self.packet_table.setColumnWidth(1, 200)  # 设置第二列宽度为 200 像素
         self.packet_table.setColumnWidth(2, 200)  # 设置第三列宽度为 200 像素
-        self.packet_table.setColumnWidth(3, 150)  # 设置第四列宽度为 200 像素
-        self.packet_table.setColumnWidth(4, 150)  # 设置第五列宽度为 200 像素
+        self.packet_table.setColumnWidth(3, 200)  # 设置第四列宽度为 200 像素
+        self.packet_table.setColumnWidth(4, 200)  # 设置第五列宽度为 200 像素
         self.packet_table.setColumnWidth(5, 100)  # 设置第六列宽度为 100 像素
         self.packet_table.setColumnWidth(6, 100)  # 设置第七列宽度为 1000 像素
         self.packet_table.setColumnWidth(7, 1000)  # 设置第八列宽度为 1000 像素
